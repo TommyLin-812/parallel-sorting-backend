@@ -13,7 +13,6 @@ public class TestDataServiceImpl implements TestDataService {
     @Autowired
     private TestDataMapper testDataMapper;
 
-
     @Override
     public List<Integer> getDataQty() {
         return testDataMapper.getDataQty();

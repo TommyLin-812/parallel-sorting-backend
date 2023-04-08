@@ -18,7 +18,7 @@ public class ExecuteController {
     private ExecuteService executeService;
 
     @GetMapping("/execute")
-    public Result execute(){
+    public Result execute() {
         log.info("开始执行排序");
 
         try {

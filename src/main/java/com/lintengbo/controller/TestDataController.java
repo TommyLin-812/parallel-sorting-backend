@@ -29,7 +29,7 @@ public class TestDataController {
     }
 
     @GetMapping("/testdata/{dataQty}")
-    public Result getTestData(@PathVariable Integer dataQty){
+    public Result getTestData(@PathVariable Integer dataQty) {
         log.info("获取指定数据规模的实验数据");
 
         List<TestData> list = testDataService.getTestData(dataQty);

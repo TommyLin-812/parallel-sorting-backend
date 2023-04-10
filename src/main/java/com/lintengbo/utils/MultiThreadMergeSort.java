@@ -22,6 +22,8 @@ public class MultiThreadMergeSort extends Thread {
 
     private static Semaphore[] s;   //信号量数组
 
+    private static final Semaphore activityListSemaphore = new Semaphore(1);
+
     private final int start;        //区域左边界
     private final int mid;          //区域中心
     private final int end;          //区域右边界
@@ -55,15 +57,23 @@ public class MultiThreadMergeSort extends Thread {
     public void run() {
         String timestamp = format.format(new Date());
         String content;
+        Activity activity;
         //排序的第一个循环执行完整归并排序操作，后续循环执行合并操作
         if (flag) {
             SingleThreadMergeSort.merge_sort_recursive(arr, result, start, end);
             content = threadName + "号线程正在对" + start + "~" + end + "范围进行归并排序操作。";
-            activityList.add(new Activity(content, timestamp));
         } else {
             SingleThreadMergeSort.merge(arr, result, start, mid, end);
             content = threadName + "号线程正在对" + start + "~" + mid + "和" + (mid + 1) + "~" + end + "范围进行合并操作。";
-            activityList.add(new Activity(content, timestamp));
+        }
+        activity = new Activity(content, timestamp);
+
+        try {
+            activityListSemaphore.acquire();
+            activityList.add(activity);
+            activityListSemaphore.release();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
 
         //System.out.println("Thread " + threadName + " exiting.");
@@ -82,6 +92,8 @@ public class MultiThreadMergeSort extends Thread {
         boolean last = false;
 
         int cycleNum = 0;
+
+        int oldThreadNum = threadNum;
 
         //初始化
         int len = arr.length;
@@ -130,7 +142,7 @@ public class MultiThreadMergeSort extends Thread {
                 }
             }
 
-            if (threadNum % 2 == 1 && !last) hasExtraDiv = true;
+            if (oldThreadNum > 2 && threadNum % 2 == 1 && !last) hasExtraDiv = true;
             int newThreadNum = threadNum / 2; //计算下一循环所需线程数
 
             //若无剩余区域，且线程数量为0，结束操作

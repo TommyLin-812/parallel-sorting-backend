@@ -25,26 +25,25 @@ public class ExecuteServiceImpl implements ExecuteService {
     private TestDataMapper testDataMapper;
 
     @Override
-    public void execute() throws IOException {
+    public List<Activity> execute() throws IOException {
         Param param = paramMapper.getParam();
         int qty = param.getDataQty();
         short threadNum = param.getThreadNum();
         short executeTimes = param.getExecuteTimes();
 
-        String dir = "RandomData-" + qty + ".txt";
-        File file = new File(dir);
+        File file = new File("RandomData.txt");
         int[] arr = new int[qty];
 
-        List<Activity> activityList=new ArrayList<>();
+        List<Activity> activityList = null;
 
         if (!file.exists()) {
             int num;
             file.createNewFile();   //如果文件不存在，创建文件
             BufferedWriter bw = new BufferedWriter(new FileWriter(file));   //创建BufferedWriter对象
             //向文件中写入内容
-            for (int i = 0; i < qty; i++) {
-                num = (int) (random() * 1000000);
-                arr[i] = num;
+            for (int i = 0; i < 10000000; i++) {
+                num = (int) (random() * 100000000);
+                if (i < qty) arr[i] = num;
                 bw.write(num + "\n");
             }
             bw.flush();
@@ -53,7 +52,8 @@ public class ExecuteServiceImpl implements ExecuteService {
             BufferedReader br = new BufferedReader(new FileReader(file));
             int i = 0;
             String line;
-            while ((line = br.readLine()) != null) {
+            while (i < qty) {
+                line = br.readLine();
                 arr[i++] = Integer.parseInt(line);
             }
             br.close();
@@ -62,8 +62,9 @@ public class ExecuteServiceImpl implements ExecuteService {
         MultiThreadMergeSort.initArray(arr);
 
         for (int i = 0; i < executeTimes; i++) {
+            activityList = new ArrayList<>();
             long startTime = System.currentTimeMillis();
-            MultiThreadMergeSort.startSorting(threadNum);
+            MultiThreadMergeSort.startSorting(threadNum, activityList);
             long endTime = System.currentTimeMillis();
             long costTime = endTime - startTime;
 
@@ -71,8 +72,7 @@ public class ExecuteServiceImpl implements ExecuteService {
             testDataMapper.insert(testData);
         }
 
-        dir="SortedData-"+qty+".txt";
-        file=new File(dir);
+        file = new File("SortedData.txt");
         if (!file.exists()) file.createNewFile();
         BufferedWriter bw = new BufferedWriter(new FileWriter(file));
         for (int i : arr) {
@@ -80,5 +80,7 @@ public class ExecuteServiceImpl implements ExecuteService {
         }
         bw.flush();
         bw.close();
+
+        return activityList;
     }
 }

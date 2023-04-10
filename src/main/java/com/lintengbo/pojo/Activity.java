@@ -11,5 +11,5 @@ import java.util.Date;
 @NoArgsConstructor
 public class Activity {
     private String content;
-    private Date timestamp;
+    private String timestamp;
 }

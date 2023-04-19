@@ -58,13 +58,16 @@ public class MultiThreadMergeSort extends Thread {
         String timestamp = format.format(new Date());
         String content;
         Activity activity;
+        long startTime = System.currentTimeMillis();
         //排序的第一个循环执行完整归并排序操作，后续循环执行合并操作
         if (flag) {
             SingleThreadMergeSort.merge_sort_recursive(arr, result, start, end);
-            content = threadName + "号线程正在对" + start + "~" + end + "范围进行归并排序操作。";
+            long endTime = System.currentTimeMillis();
+            content = threadName + "号线程对" + start + "~" + end + "范围进行归并排序操作，耗时" + (endTime - startTime) + "毫秒。";
         } else {
             SingleThreadMergeSort.merge(arr, result, start, mid, end);
-            content = threadName + "号线程正在对" + start + "~" + mid + "和" + (mid + 1) + "~" + end + "范围进行合并操作。";
+            long endTime = System.currentTimeMillis();
+            content = threadName + "号线程对" + start + "~" + mid + "和" + (mid + 1) + "~" + end + "范围进行合并操作，耗时" + (endTime - startTime) + "毫秒。";
         }
         activity = new Activity(content, timestamp);
 

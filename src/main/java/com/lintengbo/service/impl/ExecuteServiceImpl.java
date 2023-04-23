@@ -59,10 +59,13 @@ public class ExecuteServiceImpl implements ExecuteService {
             br.close();
         }
 
-        MultiThreadMergeSort.initArray(arr);
-
         for (int i = 0; i < executeTimes; i++) {
             activityList = new ArrayList<>();
+
+            int[] result = new int[qty];
+            System.arraycopy(arr, 0, result, 0, qty);
+            MultiThreadMergeSort.initArray(result);
+
             long startTime = System.currentTimeMillis();
             MultiThreadMergeSort.startSorting(threadNum, activityList);
             long endTime = System.currentTimeMillis();

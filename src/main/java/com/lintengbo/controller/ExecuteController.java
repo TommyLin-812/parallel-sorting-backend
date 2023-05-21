@@ -1,6 +1,6 @@
 package com.lintengbo.controller;
 
-import com.lintengbo.pojo.Activity;
+import com.lintengbo.pojo.ExecuteData;
 import com.lintengbo.pojo.Result;
 import com.lintengbo.service.ExecuteService;
 import lombok.extern.slf4j.Slf4j;
@@ -23,13 +23,13 @@ public class ExecuteController {
     public Result execute() {
         log.info("开始执行排序");
 
-        List<Activity> activityList;
+        List<List<ExecuteData>> executeDataList;    //用于存放运行过程的列表
         try {
-            activityList = executeService.execute();
+            executeDataList = executeService.execute();    //执行排序，并获取运行过程信息
         } catch (IOException e) {
             return Result.error("待排序文件操作失败！");
         }
 
-        return Result.success(activityList);
+        return Result.success(executeDataList);
     }
 }

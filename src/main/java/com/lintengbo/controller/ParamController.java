@@ -19,7 +19,7 @@ public class ParamController {
     public Result getParam() {
         log.info("获取程序运行参数设置");
 
-        Param param = paramService.getParam();
+        Param param = paramService.getParam();  //获取运行参数
 
         return Result.success(param);
     }
@@ -28,7 +28,7 @@ public class ParamController {
     public Result setParam(@RequestBody Param param) {
         log.info("提交程序运行参数设置：{}", param);
 
-        paramService.setParam(param);
+        paramService.setParam(param);   //保存运行参数
 
         return Result.success();
     }

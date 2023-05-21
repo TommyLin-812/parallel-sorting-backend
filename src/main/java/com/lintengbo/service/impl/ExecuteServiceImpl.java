@@ -1,12 +1,17 @@
 package com.lintengbo.service.impl;
 
+import com.lintengbo.mapper.OriginalDataMapper;
 import com.lintengbo.mapper.ParamMapper;
+import com.lintengbo.mapper.SortedDataMapper;
 import com.lintengbo.mapper.TestDataMapper;
-import com.lintengbo.pojo.Activity;
+import com.lintengbo.pojo.ExecuteData;
 import com.lintengbo.pojo.Param;
 import com.lintengbo.pojo.TestData;
 import com.lintengbo.service.ExecuteService;
 import com.lintengbo.utils.MultiThreadMergeSort;
+import org.apache.ibatis.session.ExecutorType;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,50 +29,51 @@ public class ExecuteServiceImpl implements ExecuteService {
     @Autowired
     private TestDataMapper testDataMapper;
 
+    @Autowired
+    private SortedDataMapper sortedDataMapper;
+
+    @Autowired
+    private OriginalDataMapper originalDataMapper;
+
+    @Autowired
+    private SqlSessionFactory sqlSessionFactory;
+
     @Override
-    public List<Activity> execute() throws IOException {
+    public List<List<ExecuteData>> execute() throws IOException {
         Param param = paramMapper.getParam();
         int qty = param.getDataQty();
         short threadNum = param.getThreadNum();
         short executeTimes = param.getExecuteTimes();
+        boolean saveResult = param.getSaveResult();
 
         File file = new File("RandomData.txt");
         int[] arr = new int[qty];
+        int[] result = new int[0];
 
-        List<Activity> activityList = null;
+        List<List<ExecuteData>> executeDataList = null;
 
-        if (!file.exists()) {
+        if (originalDataMapper.selectByStartIndex(0).isEmpty()) {
+            SqlSession sqlSession = sqlSessionFactory.openSession(ExecutorType.BATCH, false);
+            OriginalDataMapper originalDataMapper1 = sqlSession.getMapper(OriginalDataMapper.class);
             int num;
-            file.createNewFile();   //如果文件不存在，创建文件
-            BufferedWriter bw = new BufferedWriter(new FileWriter(file));   //创建BufferedWriter对象
-            //向文件中写入内容
             for (int i = 0; i < 10000000; i++) {
                 num = (int) (random() * 100000000);
                 if (i < qty) arr[i] = num;
-                bw.write(num + "\n");
+                originalDataMapper1.insert(num);
             }
-            bw.flush();
-            bw.close();
-        } else {
-            BufferedReader br = new BufferedReader(new FileReader(file));
-            int i = 0;
-            String line;
-            while (i < qty) {
-                line = br.readLine();
-                arr[i++] = Integer.parseInt(line);
-            }
-            br.close();
-        }
+            sqlSession.commit();
+            sqlSession.clearCache();
+        } else arr = originalDataMapper.selectByTotal(qty);
 
         for (int i = 0; i < executeTimes; i++) {
-            activityList = new ArrayList<>();
+            executeDataList = new ArrayList<>();
 
-            int[] result = new int[qty];
+            result = new int[qty];
             System.arraycopy(arr, 0, result, 0, qty);
             MultiThreadMergeSort.initArray(result);
 
             long startTime = System.currentTimeMillis();
-            MultiThreadMergeSort.startSorting(threadNum, activityList);
+            MultiThreadMergeSort.startSorting(threadNum, executeDataList);
             long endTime = System.currentTimeMillis();
             long costTime = endTime - startTime;
 
@@ -75,15 +81,17 @@ public class ExecuteServiceImpl implements ExecuteService {
             testDataMapper.insert(testData);
         }
 
-        file = new File("SortedData.txt");
-        if (!file.exists()) file.createNewFile();
-        BufferedWriter bw = new BufferedWriter(new FileWriter(file));
-        for (int i : arr) {
-            bw.write(i + "\n");
+        if (saveResult) {
+            sortedDataMapper.clearAll();
+            SqlSession sqlSession = sqlSessionFactory.openSession(ExecutorType.BATCH, false);
+            SortedDataMapper sortedDataMapper1 = sqlSession.getMapper(SortedDataMapper.class);
+            for (int i : result) {
+                sortedDataMapper1.insert(i);
+            }
+            sqlSession.commit();
+            sqlSession.clearCache();
         }
-        bw.flush();
-        bw.close();
 
-        return activityList;
+        return executeDataList;
     }
 }

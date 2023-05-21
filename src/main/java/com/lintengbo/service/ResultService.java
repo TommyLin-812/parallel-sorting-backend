@@ -1,8 +1,11 @@
 package com.lintengbo.service;
 
+import com.lintengbo.pojo.Num;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import java.util.List;
+
 public interface ResultService {
-    void getSortedData(HttpServletRequest request, HttpServletResponse response);
+    List<Num> getSortedDataByPage(Integer page);
 }

@@ -1,8 +1,9 @@
 package com.lintengbo.utils;
 
-import com.lintengbo.pojo.Activity;
+import com.lintengbo.pojo.ExecuteData;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
@@ -13,7 +14,9 @@ public class MultiThreadMergeSort extends Thread {
 
     private final String threadName;
 
-    private static List<Activity> activityList;
+    private static List<List<ExecuteData>> executeDataList;
+
+    private static List<ExecuteData> executeData;
 
     private static final SimpleDateFormat format = new SimpleDateFormat("hh:mm:ss:SS");
 
@@ -22,7 +25,7 @@ public class MultiThreadMergeSort extends Thread {
 
     private static Semaphore[] s;   //信号量数组
 
-    private static final Semaphore activityListSemaphore = new Semaphore(1);
+    private static final Semaphore executeDataSemaphore = new Semaphore(1);
 
     private final int start;        //区域左边界
     private final int mid;          //区域中心
@@ -55,26 +58,28 @@ public class MultiThreadMergeSort extends Thread {
     }
 
     public void run() {
-        String timestamp = format.format(new Date());
+        String startTimeStr = format.format(new Date());
         String content;
-        Activity activity;
+        ExecuteData executeData;
         long startTime = System.currentTimeMillis();
+        long endTime;
         //排序的第一个循环执行完整归并排序操作，后续循环执行合并操作
         if (flag) {
             SingleThreadMergeSort.merge_sort_recursive(arr, result, start, end);
-            long endTime = System.currentTimeMillis();
-            content = threadName + "号线程对" + start + "~" + end + "范围进行归并排序操作，耗时" + (endTime - startTime) + "毫秒。";
+            endTime = System.currentTimeMillis();
+            content = "对" + start + "~" + end + "范围进行归并排序操作。";
         } else {
             SingleThreadMergeSort.merge(arr, result, start, mid, end);
-            long endTime = System.currentTimeMillis();
-            content = threadName + "号线程对" + start + "~" + mid + "和" + (mid + 1) + "~" + end + "范围进行合并操作，耗时" + (endTime - startTime) + "毫秒。";
+            endTime = System.currentTimeMillis();
+            content = "对" + start + "~" + mid + "和" + (mid + 1) + "~" + end + "范围进行合并操作。";
         }
-        activity = new Activity(content, timestamp);
+        String endTimeStr = format.format(new Date());
+        executeData = new ExecuteData(Integer.parseInt(threadName), startTimeStr, endTimeStr, (int) (endTime - startTime), content);
 
         try {
-            activityListSemaphore.acquire();
-            activityList.add(activity);
-            activityListSemaphore.release();
+            executeDataSemaphore.acquire();
+            MultiThreadMergeSort.executeData.add(executeData);
+            executeDataSemaphore.release();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -84,8 +89,8 @@ public class MultiThreadMergeSort extends Thread {
         s[Integer.parseInt(threadName)].release();  //释放信号量
     }
 
-    public static void startSorting(int threadNum, List<Activity> activityList) {
-        MultiThreadMergeSort.activityList = activityList;
+    public static void startSorting(int threadNum, List<List<ExecuteData>> executeDataList) {
+        MultiThreadMergeSort.executeDataList = executeDataList;
 
         format.setTimeZone(TimeZone.getTimeZone("Etc/GMT-8"));
 
@@ -119,7 +124,7 @@ public class MultiThreadMergeSort extends Thread {
 
         boolean flag = true;    //标记第一次运行，线程要执行完整归并排序
         while (true) {
-            activityList.add(new Activity("程序开始执行第" + ++cycleNum + "轮操作，共" + threadNum + "个线程", format.format(new Date())));
+            executeData = new ArrayList<>();
 
             MultiThreadMergeSort[] t = new MultiThreadMergeSort[threadNum]; //根据线程数量创建线程数组
             s = new Semaphore[threadNum];   //根据线程数量创建信号量数组
@@ -141,6 +146,8 @@ public class MultiThreadMergeSort extends Thread {
                     System.out.println(e.getMessage());
                 }
             }
+
+            executeDataList.add(executeData);
 
             flag = false;   //第一轮操作之后都执行合并操作
 

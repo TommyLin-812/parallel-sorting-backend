@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TestData {
-    private Integer dataQty;
-    private Short threadNum;
-    private Integer costTime;
+    private Integer dataQty;    //数据规模
+    private Short threadNum;    //线程数量
+    private Integer costTime;   //消耗时间
 }

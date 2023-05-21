@@ -23,7 +23,7 @@ public class TestDataController {
     public Result getDataQty() {
         log.info("获取数据规模列表");
 
-        List<Integer> list = testDataService.getDataQty();
+        List<Integer> list = testDataService.getDataQty();  //获取当前有实验数据的数据规模的列表
 
         return Result.success(list);
     }
